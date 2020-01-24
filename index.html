@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      .slidecontainer {
+        width: 100%;
+        position: relative;
+      }
+
+      .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 15px;
+        border-radius: 5px;
+        background: transparent;
+        opacity: 0.7;
+        outline: none;
+        -webkit-transition: 0.2s;
+        transition: opacity 0.2s;
+        position: relative;
+      }
+
+      .slider:hover {
+        opacity: 1;
+      }
+
+      .slider:hover::-webkit-slider-thumb,
+      .slider:focus::-webkit-slider-thumb {
+        box-shadow: 0px 1px 4px -1px rgba(0, 0, 0, 0.8);
+      }
+
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 25px;
+        height: 50px;
+        border-radius: 3px;
+        background: transparent;
+        border: 3px solid orange;
+        border-bottom-width: 12px;
+        cursor: pointer;
+        position: relative;
+        top: 5px;
+      }
+
+      .slider::-moz-range-thumb {
+        width: 25px;
+        height: 50px;
+        border-radius: 3px;
+        background: transparent;
+        border: 3px solid orange;
+        border-bottom-width: 12px;
+        cursor: pointer;
+        position: relative;
+        top: -5px;
+      }
+
+      .horz-scroll-wrapper {
+        width: 100%;
+        overflow: auto;
+        scroll-behavior: auto;
+      }
+
+      .wide-grid {
+        min-width: 100%;
+        height: 10vh;
+        background-color: whitesmoke;
+        display: flex;
+      }
+
+      .grid-item {
+        background-color: rgb(0, 148, 148);
+        border-radius: 4px;
+        box-shadow: 0px 2px 6px -2px rgba(0, 0, 0, 0.767);
+        width: 150px;
+        margin: 28px 5px;
+      }
+
+      .minimap {
+        height: 20px;
+        width: 100%;
+        position: absolute;
+        display: flex;
+        top: 0;
+        left: 0;
+        /* take away if you want minimap items to be clickable,
+          otherwise, the range input will take precedence
+         */
+        z-index: -1;
+      }
+
+      .minimap-item {
+        background-color: rgba(227, 234, 245);
+        border-radius: 4px;
+        box-shadow: 0px 1px 4px -2px rgba(0, 0, 0, 0.767);
+        flex: 1;
+        margin: 3px 3px;
+      }
+
+      .minimap-item.mouseover {
+        background-color: rgb(11, 75, 179);
+      }
+    </style>
+
+    <style data="test" type="text/css"></style>
+  </head>
+  <body>
+    <h1>Round Range Slider</h1>
+
+    <div class="slidecontainer">
+      <input type="range" min="0" max="100" value="0" class="slider" id="myRange" />
+      <p>Value: <span id="demo">0</span></p>
+      <div class="minimap"></div>
+    </div>
+
+    <div class="horz-scroll-wrapper">
+      <div class="wide-grid">
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+        <div class="grid-item"></div>
+      </div>
+    </div>
+
+    <script>
+      // grab all the things
+      const scrollWrapper = document.querySelector('.horz-scroll-wrapper');
+      const insideGrid = document.querySelector('.wide-grid');
+      const style = document.querySelector('[data="test"]');
+      const slider = document.getElementById('myRange');
+      const output = document.getElementById('demo');
+
+      function setData(width) {
+        style.innerHTML = `
+          .slider::-webkit-slider-thumb {
+            width: ${width}px !important;
+          }`;
+      }
+
+      const miniMap = document.querySelector('.minimap');
+      const gridItems = Array.from(document.querySelectorAll('.grid-item'));
+
+      insideGrid.style.width = `${gridItems.length * 160}px`;
+
+      gridItems.map(item => {
+        const el = document.createElement('div');
+        el.setAttribute('class', 'minimap-item');
+        miniMap.append(el);
+      });
+
+      // get size coeff and slider thumb width
+      const scrollWidth = scrollWrapper.scrollWidth;
+      const clientWidth = scrollWrapper.clientWidth;
+      const thumbCoeff = clientWidth / scrollWidth;
+      const correctionCoeff = scrollWidth / clientWidth / 100;
+
+      const thumbWidth = Math.round(thumbCoeff * slider.clientWidth);
+
+      const state = {
+        isSlider: false
+      };
+      // scroll wrapper listener
+      scrollWrapper.addEventListener('scroll', e => {
+        if (!state.isSlider) {
+          console.log('is fired');
+          const left = e.target.scrollLeft;
+          const scrollableArea = scrollWidth - clientWidth;
+          const updatedSliderValue = Math.round((left / scrollableArea) * 100);
+
+          slider.value = updatedSliderValue;
+          output.innerHTML = updatedSliderValue;
+        }
+      });
+
+      // prevent scroll event from firing when updating scrollLeft in
+      // slider input listener
+      slider.addEventListener('focus', e => {
+        state.isSlider = true;
+      });
+      slider.addEventListener('blur', e => {
+        state.isSlider = false;
+      });
+      slider.addEventListener('mouseenter', e => {
+        state.isSlider = true;
+      });
+      slider.addEventListener('mouseleave', e => {
+        state.isSlider = false;
+      });
+
+      // slider listener
+      slider.addEventListener('input', e => {
+        // console.log('input event', e);
+        output.innerHTML = e.target.value;
+        const scrollOffset = e.target.value / 100;
+        const scrollableArea = scrollWidth - clientWidth;
+        scrollWrapper.scrollLeft = Math.round(scrollableArea * scrollOffset);
+      });
+
+      setData(thumbWidth);
+
+      Array.from(document.querySelectorAll('.minimap-item')).forEach(el => {
+        el.addEventListener('mouseover', e => {
+          e.target.classList.add('mouseover');
+        });
+        el.addEventListener('mouseleave', e => {
+          e.target.classList.remove('mouseover');
+        });
+      });
+    </script>
+  </body>
+</html>
